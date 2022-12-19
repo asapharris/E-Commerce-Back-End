@@ -3,26 +3,20 @@ const { Category, Product } = require('../../models');
 
 // The `/api/categories` endpoint
 
-router.get('/', async (req, res) => {
-  try {
-    const categoryData = await Category.findAll({
-      include: [{ model: Product },],
-      attributes: {
-        include: [
-          [
-            // Use plain SQL to add up the total mileage
-            sequelize.literal(
-              '(SELECT SUM(mileage) FROM car WHERE car.driver_id = driver.id)'
-            ),
-            'totalMileage',
-          ],
-        ],
-      },
+router.get('/', (req, res) => {
+  Category.findAll(
+    {
+      include: {
+        model: Product,
+        attributes: ['product_name']
+      }
+    }
+  )
+    .then(categoryData => res.json(categoryData))
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
     });
-    res.status(200).json(categoryData);
-  } catch (err) {
-    res.status(500).json(err);
-  }
 });
 
 router.get('/:id', async (req, res) => {
@@ -38,18 +32,15 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
-  try {
-    const categoryData = await User.create({
-      username: req.body.username,
-      email: req.body.email,
-      password: req.body.password,
-      numberOfPets: req.body.numberOfPets,
+router.post('/', (req, res) => {
+  Category.create({
+    category_name: req.body.category_name
+  })
+    .then(categoryData => res.json(categoryData))
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
     });
-    res.status(200).json(categoryData);
-  } catch (err) {
-    res.status(400).json(err);
-  }
 });
 
 router.put('/:id', async (req, res) => {
@@ -77,7 +68,7 @@ router.delete('/:id', async (req, res) => {
       },
     });
     if (!categoryData[0]) {
-      res.status(404).json({ message: 'No user with this id!'});
+      res.status(404).json({ message: 'No user with this id!' });
       return;
     }
     res.status(200).json(categoryData);
